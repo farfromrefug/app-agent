@@ -8,6 +8,7 @@
     "postbuild": "prisma migrate deploy",
     "start": "next start",
     "lint": "next lint",
+    "admin:create": "node scripts/create-admin.mjs",
     "test": "jest",
     "test:watch": "jest --watch",
     "prepare": "husky"

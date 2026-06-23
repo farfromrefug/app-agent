@@ -14,13 +14,33 @@ import {
   PiGlobeBold,
 } from 'react-icons/pi';
 import { useTranslations } from 'next-intl';
+import { OPEN_SOURCE_MODE } from '@/lib/config';
 
 export default function Login() {
   const { next } = useParams as { next?: string };
   const [email, setEmail] = useState<string>('');
+  const [password, setPassword] = useState<string>('');
+  const [isPasswordLoading, setIsPasswordLoading] = useState(false);
   const [isEmailCooldown, setIsEmailCooldown] = useState(false);
   const t = useTranslations('login');
   const common = useTranslations('common');
+
+  const handlePasswordLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsPasswordLoading(true);
+    const res = await signIn('credentials', {
+      email,
+      password,
+      redirect: false,
+      ...(next && next.length > 0 ? { callbackUrl: next } : {}),
+    });
+    setIsPasswordLoading(false);
+    if (res?.ok && !res?.error) {
+      window.location.href = next && next.length > 0 ? next : '/dashboard';
+    } else {
+      toast.error('Invalid email or password');
+    }
+  };
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsEmailCooldown(true);
@@ -166,6 +186,31 @@ export default function Login() {
                     : t('sign-in-with-email')}
                 </Button>
               </form>
+
+              {OPEN_SOURCE_MODE && (
+                <form className="space-y-4" onSubmit={handlePasswordLogin}>
+                  <Input
+                    id="password"
+                    name="password"
+                    type="password"
+                    autoComplete="current-password"
+                    required
+                    placeholder="Password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                  <Button
+                    type="submit"
+                    variant="outline"
+                    className="w-full"
+                    disabled={isPasswordLoading}
+                  >
+                    {isPasswordLoading
+                      ? 'Signing in…'
+                      : 'Sign in with password'}
+                  </Button>
+                </form>
+              )}
 
               <div className="relative flex items-center justify-center">
                 <div className="absolute inset-0 flex items-center">

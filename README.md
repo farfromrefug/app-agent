@@ -139,7 +139,23 @@ npm run prisma generate
 npm run prisma migrate deploy
 ```
 
-### 5. Run the development server
+### 5. Create your admin account
+
+In open-source mode you can bootstrap the first account from the CLI and sign in
+with email + password — no email service or OAuth required. Set `ADMIN_EMAIL`,
+`ADMIN_NAME`, and `ADMIN_PASSWORD` in your `.env`, then run:
+
+```bash
+yarn admin:create
+
+# Or with NPM
+npm run admin:create
+```
+
+This is idempotent — re-running updates the password. Sign in later at
+`/login` using the password form.
+
+### 6. Run the development server
 
 ```bash
 yarn dev
