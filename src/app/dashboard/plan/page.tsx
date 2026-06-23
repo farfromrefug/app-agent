@@ -1,7 +1,9 @@
 import { FaUserCircle } from 'react-icons/fa';
+import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import Plans from '@/components/plan/plans';
 import UpgradePlan from '@/components/plan/upgrade-plan';
+import { OPEN_SOURCE_MODE } from '@/lib/config';
 
 export const metadata = {
   title: 'AppAgent Plans',
@@ -10,6 +12,10 @@ export const metadata = {
 };
 
 export default function PlanPage() {
+  // Open-source build has no paid plans; never show the upgrade page.
+  if (OPEN_SOURCE_MODE) {
+    redirect('/dashboard');
+  }
   return (
     <div className="w-full min-h-screen bg-gradient-to-b from-white via-gray-50 to-gray-100">
       <div className="container max-w-6xl px-4 mx-auto">

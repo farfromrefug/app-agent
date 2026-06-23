@@ -104,8 +104,10 @@ Here's the list of environment variables you need to set:
   - The URL of your Upstash account. Used for caching.
 - `UPSTASH_REDIS_REST_TOKEN`
   - The token of your Upstash account. Used for caching.
+- `NEXT_PUBLIC_OPEN_SOURCE`
+  - Open-source mode. Defaults to `true`: the app is fully free/unlimited and all billing/Stripe UI is hidden, so none of the Stripe variables below are required. Set to `false` to restore the paid plan flow.
 - `NEXT_PUBLIC_FREE_PLAN_ENABLED`
-  - Whether the free plan is enabled. Set to `true` to enable the free plan.
+  - Whether the free plan is enabled. Implicitly `true` while `NEXT_PUBLIC_OPEN_SOURCE=true`; only set this explicitly when running in paid mode.
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
   - The publishable key of your Stripe account. Used for payments. If you set `NEXT_PUBLIC_FREE_PLAN_ENABLED` to `true`, this is not necessary.
 - `STRIPE_SECRET_KEY`

@@ -11,6 +11,7 @@ import { AuditLog } from '@/components/account/audit-log';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { DeleteAccount } from '@/components/account/delete-account';
+import { OPEN_SOURCE_MODE } from '@/lib/config';
 import { useTranslations } from 'next-intl';
 
 export default function AccountSettingsView() {
@@ -32,7 +33,7 @@ export default function AccountSettingsView() {
         <AccountInfo />
         <TeamSettings />
         <PublishApprovalQueue />
-        <BillingSettings />
+        {!OPEN_SOURCE_MODE && <BillingSettings />}
         <StoreCredentials />
         <NotificationSettings />
         <motion.div
