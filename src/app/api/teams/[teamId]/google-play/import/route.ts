@@ -4,7 +4,7 @@ import { getGooglePlayKeyFromDB } from '@/lib/google-play/key';
 import { getGooglePlayAppsByPackageNames } from '@/lib/google-play/app';
 import { handleAppError, InvalidParamsError } from '@/types/errors';
 import prisma from '@/lib/prisma';
-import { Platform, Store } from '@prisma/client';
+import { Platform, Store } from '@/lib/db-enums';
 
 export const maxDuration = 180;
 

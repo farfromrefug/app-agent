@@ -15,7 +15,7 @@ import {
   UnknownError,
 } from '@/types/errors';
 import prisma from '@/lib/prisma';
-import { Store } from '@prisma/client';
+import { Store } from '@/lib/db-enums';
 
 export const maxDuration = 20;
 

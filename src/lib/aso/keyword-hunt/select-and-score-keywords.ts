@@ -10,6 +10,10 @@ import {
 } from '@/types/aso';
 import { getTrackedCompetitors } from './manage-competitors';
 import prisma from '@/lib/prisma';
+import {
+  parseGuessedKeywords,
+  serializeGuessedKeywords,
+} from '@/lib/serialize-keywords';
 import { rerankKeywords } from '@/lib/llm/utils/rerank-keywords';
 import { sliceKeywords } from '@/lib/utils/keyword-slice';
 import { FIELD_LIMITS } from '@/types/app-store';
@@ -63,9 +67,12 @@ export async function selectAndScoreKeywords(
   for (const batch of batches) {
     const batchKeywords = await Promise.all(
       batch.map(async (competitor) => {
-        if (competitor.guessedKeywords?.length > 0) {
+        const existingKeywords = parseGuessedKeywords(
+          competitor.guessedKeywords
+        );
+        if (existingKeywords.length > 0) {
           // If the competitor already has guessed keywords, use them
-          return competitor.guessedKeywords;
+          return existingKeywords;
         }
 
         const keywords = await extractKeywordsFromTitleAndDescription(
@@ -77,7 +84,7 @@ export async function selectAndScoreKeywords(
         // Update competitor model with extracted keywords
         await prisma.competitor.update({
           where: { id: competitor.id },
-          data: { guessedKeywords: keywords },
+          data: { guessedKeywords: serializeGuessedKeywords(keywords) },
         });
 
         // Update the competitor object in memory
@@ -95,7 +102,7 @@ export async function selectAndScoreKeywords(
   const competitorKeywords: CompetitorKeyword[] = [];
   for (const keyword of deduplicatedKeywords) {
     const filteredCompetitors = competitors.filter((competitor) =>
-      competitor.guessedKeywords?.includes(keyword)
+      parseGuessedKeywords(competitor.guessedKeywords).includes(keyword)
     );
     competitorKeywords.push({
       keyword,

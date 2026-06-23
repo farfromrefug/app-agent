@@ -3,7 +3,7 @@ import { NextResponse } from "next/server";
 import { validateTeamAccess } from "@/lib/auth";
 import { AppNotFoundError, handleAppError } from "@/types/errors";
 import prisma from "@/lib/prisma";
-import { Store } from "@prisma/client";
+import { Store } from '@/lib/db-enums';
 
 // Get builds for a pre-release version
 export async function GET(request: Request, { params }: { params: { teamId: string; appId: string; versionId: string } }) {

@@ -1,6 +1,7 @@
 import { validateTeamAccess } from '@/lib/auth';
 import { handleAppError, AppNotFoundError } from '@/types/errors';
 import prisma from '@/lib/prisma';
+import { parseGuessedKeywords } from '@/lib/serialize-keywords';
 import { NextResponse } from 'next/server';
 import openai from '@/lib/llm/openai';
 import { LLM_MODEL } from '@/lib/config';
@@ -58,7 +59,7 @@ export async function POST(
       take: 5,
     });
     const allCompKws = competitors
-      .flatMap((c) => c.guessedKeywords)
+      .flatMap((c) => parseGuessedKeywords(c.guessedKeywords))
       .slice(0, 40);
     const competitorKeywords = Array.from(new Set(allCompKws));
 

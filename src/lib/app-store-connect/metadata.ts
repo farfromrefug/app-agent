@@ -11,7 +11,7 @@ import {
   InvalidParamsError,
 } from '@/types/errors';
 import { draftVersion, publicVersion } from '@/lib/utils/versions';
-import { Platform } from '@prisma/client';
+import { Platform } from '@/lib/db-enums';
 
 export async function fetchAppInfos(
   token: string,

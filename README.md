@@ -116,8 +116,10 @@ Here's the list of environment variables you need to set:
   - The webhook secret of your Stripe account. Used for webhooks. If you set `NEXT_PUBLIC_FREE_PLAN_ENABLED` to `true`, this is not necessary.
 - `STRIPE_PRO_PRICE_ID`
   - The price ID of your Stripe Pro plan. Used for payments. If you set `NEXT_PUBLIC_FREE_PLAN_ENABLED` to `true`, this is not necessary.
+- `DATABASE_PROVIDER`
+  - `postgresql` (default) or `sqlite`. Use `sqlite` for a zero-setup local/desktop database; the SQLite schema is generated automatically from the canonical Postgres schema by `yarn db:setup`.
 - `DATABASE_URL`
-  - The URL of your PostgreSQL database. Beside a local machine, you can use [Supabase](https://supabase.com/) or [Neon](https://neon.tech/) for free services.
+  - The database connection string. For Postgres: a `postgresql://…` URL (beside a local machine, you can use [Supabase](https://supabase.com/) or [Neon](https://neon.tech/) for free services). For SQLite: a file URL such as `file:./dev.db`.
 
 ### 3. Install dependencies
 
@@ -130,14 +132,25 @@ npm install
 
 ### 4. Set up DB
 
+`db:setup` reads `DATABASE_PROVIDER` and prepares the right database — for
+Postgres it runs `prisma generate` + `prisma migrate deploy`; for SQLite it
+generates a SQLite schema and runs `prisma db push`.
+
 ```bash
-yarn prisma generate
-yarn prisma migrate deploy
+yarn db:setup
 
 # Or with NPM
-npm run prisma generate
-npm run prisma migrate deploy
+npm run db:setup
 ```
+
+For a local SQLite database, set the following in `.env` first:
+
+```bash
+DATABASE_PROVIDER=sqlite
+DATABASE_URL="file:./dev.db"
+```
+
+`db:setup` also runs automatically before `yarn dev` and `yarn build`.
 
 ### 5. Create your admin account
 

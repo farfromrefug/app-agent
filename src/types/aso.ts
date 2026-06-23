@@ -7,7 +7,7 @@ import {
 } from '@prisma/client';
 
 // Re-export Store and Platform both as types and as enums
-export { Store, Platform } from '@prisma/client';
+export { Store, Platform } from '@/lib/db-enums';
 
 export enum AsoTarget {
   title = 'title',

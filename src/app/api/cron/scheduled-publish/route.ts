@@ -9,7 +9,7 @@ import {
 import { updateMultipleListings as updateGooglePlayMultipleListings } from '@/lib/google-play/metadata';
 import { getGooglePlayKeyFromDB } from '@/lib/google-play/key';
 import { hasPublicVersion } from '@/lib/utils/versions';
-import { Store } from '@prisma/client';
+import { Store } from '@/lib/db-enums';
 import { logCron } from '@/lib/utils/log-cron';
 
 export const maxDuration = 120;

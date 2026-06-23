@@ -16,7 +16,7 @@ import {
 } from '@/lib/google-play/metadata';
 import { getGooglePlayKeyFromDB } from '@/lib/google-play/key';
 import { hasPublicVersion } from '@/lib/utils/versions';
-import { Store } from '@prisma/client';
+import { Store } from '@/lib/db-enums';
 
 export const maxDuration = 60;
 
