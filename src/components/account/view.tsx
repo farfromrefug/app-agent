@@ -5,6 +5,7 @@ import { TeamSettings } from '@/components/account/team-settings';
 import { BillingSettings } from '@/components/account/bill-settings';
 import { NotificationSettings } from '@/components/account/notification-settings';
 import { StoreCredentials } from '@/components/account/store-credentials';
+import { LlmSettings } from '@/components/account/llm-settings';
 import { PublishApprovalQueue } from '@/components/account/publish-approval-queue';
 import { AutoReplyRules } from '@/components/aso/auto-reply-rules';
 import { AuditLog } from '@/components/account/audit-log';
@@ -35,6 +36,7 @@ export default function AccountSettingsView() {
         <PublishApprovalQueue />
         {!OPEN_SOURCE_MODE && <BillingSettings />}
         <StoreCredentials />
+        <LlmSettings />
         <NotificationSettings />
         <motion.div
           initial={{ opacity: 0, y: 20 }}

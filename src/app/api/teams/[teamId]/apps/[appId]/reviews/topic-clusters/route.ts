@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import { validateTeamAccess } from '@/lib/auth';
 import { handleAppError, AppNotFoundError } from '@/types/errors';
 import prisma from '@/lib/prisma';
-import openai from '@/lib/llm/openai';
-import { LLM_MODEL } from '@/lib/config';
+import { getTeamLlm } from '@/lib/llm/get-team-llm';
 import { logLLMUsage } from '@/lib/llm/log-usage';
 
 export const maxDuration = 30;
@@ -59,15 +58,16 @@ ${reviewText}
 Return ONLY valid JSON (no markdown) with this exact shape:
 {"clusters":[{"topic":"2-4 word topic name","emoji":"one emoji","count":N,"sentiment":"positive|negative|mixed","keywords":["term1","term2","term3"],"examples":["short excerpt max 80 chars","another excerpt"]}]}`;
 
-    const response = await openai.chat.completions.create({
-      model: LLM_MODEL,
+    const { client, model } = await getTeamLlm(teamId);
+    const response = await client.chat.completions.create({
+      model,
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.3,
       max_tokens: 900,
       response_format: { type: 'json_object' },
     });
 
-    logLLMUsage('review-topic-clusters', LLM_MODEL, response.usage);
+    logLLMUsage('review-topic-clusters', model, response.usage);
 
     let clusters: TopicCluster[] = [];
     try {

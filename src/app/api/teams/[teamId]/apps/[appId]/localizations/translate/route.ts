@@ -2,9 +2,8 @@ import { validateTeamAccess } from '@/lib/auth';
 import { handleAppError, AppNotFoundError } from '@/types/errors';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import openai from '@/lib/llm/openai';
+import { getTeamLlm } from '@/lib/llm/get-team-llm';
 import { getLocaleName, LocaleCode } from '@/lib/utils/locale';
-import { LLM_MODEL } from '@/lib/config';
 import { checkRateLimit } from '@/lib/utils/rate-limit';
 
 export const maxDuration = 120;
@@ -64,6 +63,8 @@ export async function POST(
 
     const result: Record<string, Record<string, string>> = {};
 
+    const { client, model } = await getTeamLlm(teamId);
+
     // Translate to each target locale (parallelize up to 5 at a time)
     const chunks: string[][] = [];
     for (let i = 0; i < targetLocales.length; i += 5) {
@@ -87,8 +88,8 @@ ${sourceText}
 
 Respond with a JSON object with the same keys as the source fields, containing the translated values.`;
 
-          const response = await openai.chat.completions.create({
-            model: LLM_MODEL,
+          const response = await client.chat.completions.create({
+            model,
             messages: [{ role: 'user', content: prompt }],
             response_format: { type: 'json_object' },
             temperature: 0.3,

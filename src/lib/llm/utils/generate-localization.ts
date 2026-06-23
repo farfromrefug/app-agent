@@ -1,7 +1,6 @@
-import { LLM_MODEL } from '@/lib/config';
 import { getLocaleName, LocaleCode } from '@/lib/utils/locale';
 import { systemPrompt, userPrompt } from '../prompts/localization';
-import openai from '@/lib/llm/openai';
+import { getCurrentLlm } from '@/lib/llm/llm-context';
 
 export async function generateLocalizations(
   whatsNew: string,
@@ -11,8 +10,9 @@ export async function generateLocalizations(
   appKeywords: string,
   reference?: string
 ): Promise<string> {
-  const response = await openai.chat.completions.create({
-    model: LLM_MODEL,
+  const { client, model } = getCurrentLlm();
+  const response = await client.chat.completions.create({
+    model,
     messages: [
       {
         role: 'system',

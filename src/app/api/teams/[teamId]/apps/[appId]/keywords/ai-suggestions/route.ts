@@ -3,8 +3,7 @@ import { handleAppError, AppNotFoundError } from '@/types/errors';
 import prisma from '@/lib/prisma';
 import { parseGuessedKeywords } from '@/lib/serialize-keywords';
 import { NextResponse } from 'next/server';
-import openai from '@/lib/llm/openai';
-import { LLM_MODEL } from '@/lib/config';
+import { getTeamLlm } from '@/lib/llm/get-team-llm';
 import { logLLMUsage } from '@/lib/llm/log-usage';
 
 export const maxDuration = 30;
@@ -97,8 +96,9 @@ Return a JSON object with this exact shape:
   ]
 }`;
 
-    const response = await openai.chat.completions.create({
-      model: LLM_MODEL,
+    const { client, model } = await getTeamLlm(teamId);
+    const response = await client.chat.completions.create({
+      model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -108,7 +108,7 @@ Return a JSON object with this exact shape:
       response_format: { type: 'json_object' },
     });
 
-    logLLMUsage('keyword-ai-suggestions', LLM_MODEL, response.usage);
+    logLLMUsage('keyword-ai-suggestions', model, response.usage);
 
     const raw = response.choices[0]?.message?.content ?? '{}';
     const parsed = JSON.parse(raw);

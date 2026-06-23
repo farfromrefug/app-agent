@@ -6,8 +6,7 @@ import {
 } from '@/types/errors';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import openai from '@/lib/llm/openai';
-import { LLM_MODEL } from '@/lib/config';
+import { getTeamLlm } from '@/lib/llm/get-team-llm';
 import { logLLMUsage } from '@/lib/llm/log-usage';
 import { draftVersion, publicVersion } from '@/lib/utils/versions';
 
@@ -142,8 +141,9 @@ Previous "What's New" text (for reference): ${published?.whatsNew?.slice(0, 200)
 Generate a "What's New" section. Return JSON:
 { "whatsNew": "..." }`;
 
-    const response = await openai.chat.completions.create({
-      model: LLM_MODEL,
+    const { client, model } = await getTeamLlm(teamId);
+    const response = await client.chat.completions.create({
+      model,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userPrompt },
@@ -153,7 +153,7 @@ Generate a "What's New" section. Return JSON:
       response_format: { type: 'json_object' },
     });
 
-    logLLMUsage('generate-whats-new', LLM_MODEL, response.usage);
+    logLLMUsage('generate-whats-new', model, response.usage);
 
     const raw = response.choices[0]?.message?.content ?? '{}';
     const parsed = JSON.parse(raw);

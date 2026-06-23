@@ -2,8 +2,7 @@ import { validateTeamAccess } from '@/lib/auth';
 import { handleAppError, AppNotFoundError } from '@/types/errors';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import openai from '@/lib/llm/openai';
-import { LLM_MODEL } from '@/lib/config';
+import { getTeamLlm } from '@/lib/llm/get-team-llm';
 import { z } from 'zod';
 import { zodResponseFormat } from '@/lib/llm/openai';
 
@@ -60,8 +59,9 @@ export async function GET(
 
     const reviewText = reviews.map((r) => `[${r.score}★] ${r.body}`).join('\n');
 
-    const response = await openai.beta.chat.completions.parse({
-      model: LLM_MODEL,
+    const { client, model } = await getTeamLlm(teamId);
+    const response = await client.beta.chat.completions.parse({
+      model,
       messages: [
         {
           role: 'user',

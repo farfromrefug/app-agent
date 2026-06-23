@@ -1,6 +1,6 @@
-import { LLM_MODEL } from '@/lib/config';
 import { appFilteringSystemPrompt } from '@/lib/llm/prompts/keyword';
-import openai, { zodResponseFormat } from '@/lib/llm/openai';
+import { zodResponseFormat } from '@/lib/llm/openai';
+import { getCurrentLlm } from '@/lib/llm/llm-context';
 import { ChatCompletionMessageParam } from 'openai/resources/index.mjs';
 import { z } from 'zod';
 import { LlmRefusalError } from '@/types/errors';
@@ -29,8 +29,9 @@ export async function filterApps<T extends FilterableApp>(
     },
   ] as ChatCompletionMessageParam[];
 
-  const response = await openai.beta.chat.completions.parse({
-    model: LLM_MODEL,
+  const { client, model } = getCurrentLlm();
+  const response = await client.beta.chat.completions.parse({
+    model,
     messages,
     response_format: zodResponseFormat(IndicesResponseSchema, 'indices'),
   });
@@ -39,7 +40,7 @@ export async function filterApps<T extends FilterableApp>(
     throw new LlmRefusalError('The model refused to generate indices.');
   }
 
-  logLLMUsage('filter-apps', LLM_MODEL, response.usage);
+  logLLMUsage('filter-apps', model, response.usage);
   const result = response.choices[0].message.parsed;
   const indices = result?.indices;
   return (indices?.map((i) => apps[i - 1]).filter(Boolean) as T[]) || [];

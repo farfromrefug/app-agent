@@ -21,7 +21,8 @@ export type AuditEntity =
   | 'auto_reply_rule'
   | 'review_template'
   | 'app_version'
-  | 'team_member';
+  | 'team_member'
+  | 'llm_config';
 
 export async function logAudit({
   teamId,

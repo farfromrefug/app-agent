@@ -1,5 +1,4 @@
-import { LLM_MODEL } from '@/lib/config';
-import openai from '@/lib/llm/openai';
+import { getCurrentLlm } from '@/lib/llm/llm-context';
 import { shortDescriptionSystemPrompt } from '../prompts/short-description';
 import { shortDescriptionUserPrompt } from '../prompts/short-description';
 
@@ -14,8 +13,9 @@ export async function generateShortDescription(
       appDescription: description,
     })
     .trim();
-  const response = await openai.chat.completions.create({
-    model: LLM_MODEL,
+  const { client, model } = getCurrentLlm();
+  const response = await client.chat.completions.create({
+    model,
     messages: [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userPrompt },

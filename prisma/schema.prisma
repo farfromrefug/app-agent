@@ -95,6 +95,12 @@ model Team {
   // Credentials for Google Play Store
   googleServiceAccountKey Json? // Service Account Key JSON for Google Play
 
+  // LLM provider configuration (overrides env defaults for all apps in this team)
+  llmProvider String? // "openai" | "anthropic" | "ollama" | "custom"
+  llmBaseUrl  String? // Custom/override base URL (OpenAI-compatible endpoint)
+  llmModel    String? // Model name, e.g. "gpt-4o", "claude-3-5-sonnet-latest", "llama3.1"
+  llmApiKey   String? @db.Text // Encrypted at rest (AES-GCM); never returned to the client
+
   // Stripe subscription fields
   plan           String    @default("free")
   stripeId       String?   @unique // Stripe customer ID

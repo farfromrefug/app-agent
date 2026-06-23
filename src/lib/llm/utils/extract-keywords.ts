@@ -2,11 +2,11 @@ import {
   keywordExtractionFromTitleAndDescriptionSystemPrompt,
   keywordExtractionSystemPrompt,
 } from '@/lib/llm/prompts/keyword';
-import openai, { zodResponseFormat } from '@/lib/llm/openai';
+import { zodResponseFormat } from '@/lib/llm/openai';
+import { getCurrentLlm } from '@/lib/llm/llm-context';
 import { z } from 'zod';
 import { LlmRefusalError } from '@/types/errors';
 import { getLocaleName, LocaleCode } from '@/lib/utils/locale';
-import { LLM_MODEL } from '@/lib/config';
 import { logLLMUsage } from '@/lib/llm/log-usage';
 
 const Step = z.object({
@@ -24,8 +24,9 @@ const KeywordResponseSchema = z.object({
 });
 
 export async function extractKeywords(...inputs: string[]) {
-  const response = await openai.beta.chat.completions.parse({
-    model: LLM_MODEL,
+  const { client, model } = getCurrentLlm();
+  const response = await client.beta.chat.completions.parse({
+    model,
     messages: [
       { role: 'system', content: keywordExtractionSystemPrompt },
       { role: 'user', content: inputs.join('\n\n\n') },
@@ -37,7 +38,7 @@ export async function extractKeywords(...inputs: string[]) {
     throw new LlmRefusalError('The model refused to generate keywords.');
   }
 
-  logLLMUsage('extract-keywords', LLM_MODEL, response.usage);
+  logLLMUsage('extract-keywords', model, response.usage);
   const keywords = response.choices[0].message.parsed;
 
   return keywords;
@@ -52,8 +53,9 @@ export async function extractKeywordsFromTitleAndDescription(
   if (!title || !description) {
     return [];
   }
-  const response = await openai.beta.chat.completions.parse({
-    model: LLM_MODEL,
+  const { client, model } = getCurrentLlm();
+  const response = await client.beta.chat.completions.parse({
+    model,
     messages: [
       {
         role: 'system',
@@ -74,7 +76,7 @@ Locale: ${getLocaleName(locale)}`,
     throw new LlmRefusalError('The model refused to generate keywords.');
   }
 
-  logLLMUsage('extract-keywords-from-description', LLM_MODEL, response.usage);
+  logLLMUsage('extract-keywords-from-description', model, response.usage);
   const keywords = response.choices[0].message.parsed;
 
   return keywords?.keywords || [];
