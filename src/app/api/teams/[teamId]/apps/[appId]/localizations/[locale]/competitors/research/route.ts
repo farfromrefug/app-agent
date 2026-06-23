@@ -7,6 +7,7 @@ import {
 } from '@/types/errors';
 import { googlePlayToAppStore } from '@/lib/utils/locale';
 import { findCompetitors } from '@/lib/aso/keyword-hunt/find-competitors';
+import { withTeamLlm } from '@/lib/llm/llm-context';
 import { draftVersion, publicVersion } from '@/lib/utils/versions';
 import { Store } from '@/types/aso';
 import { createStreamingResponse } from '@/lib/utils/streaming';
@@ -28,7 +29,16 @@ export async function POST(
 
     const { appId, locale } = params;
     const data = await request.json();
-    console.log(JSON.stringify({ event: 'competitor_research_start', userId, teamId, appId, locale, store: data.store }));
+    console.log(
+      JSON.stringify({
+        event: 'competitor_research_start',
+        userId,
+        teamId,
+        appId,
+        locale,
+        store: data.store,
+      })
+    );
 
     if (!data.shortDescription) {
       throw new InvalidParamsError('Short description is required');
@@ -74,17 +84,36 @@ export async function POST(
     const appStoreLocale = googlePlayToAppStore(locale);
 
     return createStreamingResponse(async (writer) => {
-      await findCompetitors(
-        appId,
-        appStoreLocale,
-        data.shortDescription,
-        writer,
-        locale
+      await withTeamLlm(teamId, () =>
+        findCompetitors(
+          appId,
+          appStoreLocale,
+          data.shortDescription,
+          writer,
+          locale
+        )
       );
-      console.log(JSON.stringify({ event: 'competitor_research_complete', userId, teamId, appId, locale, durationMs: Date.now() - startedAt }));
+      console.log(
+        JSON.stringify({
+          event: 'competitor_research_complete',
+          userId,
+          teamId,
+          appId,
+          locale,
+          durationMs: Date.now() - startedAt,
+        })
+      );
     });
   } catch (error) {
-    console.log(JSON.stringify({ event: 'competitor_research_error', userId, teamId, error: (error as Error).message, durationMs: Date.now() - startedAt }));
+    console.log(
+      JSON.stringify({
+        event: 'competitor_research_error',
+        userId,
+        teamId,
+        error: (error as Error).message,
+        durationMs: Date.now() - startedAt,
+      })
+    );
     return handleAppError(error as Error);
   }
 }

@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { generateLocalizations } from '@/lib/llm/utils/generate-localization';
+import { withTeamLlm } from '@/lib/llm/llm-context';
 import { InvalidParamsError, handleAppError } from '@/types/errors';
 import { validateTeamAccess } from '@/lib/auth';
 import { checkRateLimit } from '@/lib/utils/rate-limit';
@@ -31,45 +32,47 @@ export async function POST(
       throw new InvalidParamsError('Missing params');
     }
 
-    // Generate translations for each locale
-    const translationPromises = localizations.map(
-      async (localization: AppLocalization) => {
-        const asoKeywords = (await prisma.asoKeyword.findMany({
-          where: {
-            appId: params.appId,
-            locale: localization.locale,
-            platform: platform as Platform,
-            store: store as Store,
-          },
-          orderBy: {
-            overall: 'desc',
-          },
-        })) as AsoKeyword[];
+    // Generate translations for each locale, using the team's configured LLM.
+    const translations = await withTeamLlm(params.teamId, async () => {
+      const translationPromises = localizations.map(
+        async (localization: AppLocalization) => {
+          const asoKeywords = (await prisma.asoKeyword.findMany({
+            where: {
+              appId: params.appId,
+              locale: localization.locale,
+              platform: platform as Platform,
+              store: store as Store,
+            },
+            orderBy: {
+              overall: 'desc',
+            },
+          })) as AsoKeyword[];
 
-        const keywords =
-          asoKeywords
-            .map(
-              (keyword) =>
-                `"${keyword.keyword} (${keyword.position === -1 ? 'not within top 100' : `currently positioned at ${keyword.position}`})"`
-            )
-            .join('\n') || '';
+          const keywords =
+            asoKeywords
+              .map(
+                (keyword) =>
+                  `"${keyword.keyword} (${keyword.position === -1 ? 'not within top 100' : `currently positioned at ${keyword.position}`})"`
+              )
+              .join('\n') || '';
 
-        const translated = await generateLocalizations(
-          whatsNew,
-          localization.locale as LocaleCode,
-          localization.title || '',
-          version,
-          keywords,
-          localization.whatsNew || undefined
-        );
-        return { locale: localization.locale, text: translated };
-      }
-    );
+          const translated = await generateLocalizations(
+            whatsNew,
+            localization.locale as LocaleCode,
+            localization.title || '',
+            version,
+            keywords,
+            localization.whatsNew || undefined
+          );
+          return { locale: localization.locale, text: translated };
+        }
+      );
 
-    console.log(
-      `Going to generate ${translationPromises.length} localizations`
-    );
-    const translations = await Promise.all(translationPromises);
+      console.log(
+        `Going to generate ${translationPromises.length} localizations`
+      );
+      return Promise.all(translationPromises);
+    });
     console.log(`Generated ${translations.length} localizations`);
 
     // For example { en: 'whats new', es: 'que hay de nuevo' }

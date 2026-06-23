@@ -1,6 +1,7 @@
 import { validateTeamAccess } from '@/lib/auth';
 import { handleAppError, AppNotFoundError } from '@/types/errors';
 import prisma from '@/lib/prisma';
+import { parseGuessedKeywords } from '@/lib/serialize-keywords';
 import { NextResponse } from 'next/server';
 
 export interface KeywordOpportunity {
@@ -49,7 +50,7 @@ export async function GET(
     const opportunities: KeywordOpportunity[] = [];
 
     for (const competitor of competitors) {
-      for (const kw of competitor.guessedKeywords) {
+      for (const kw of parseGuessedKeywords(competitor.guessedKeywords)) {
         const lower = kw.toLowerCase().trim();
         if (!lower || trackedSet.has(lower) || seen.has(lower)) continue;
         seen.add(lower);

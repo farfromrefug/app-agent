@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { validateTeamAccess } from '@/lib/auth';
 import { AppNotFoundError, handleAppError } from '@/types/errors';
-import openai from '@/lib/llm/openai';
-import { LLM_MODEL } from '@/lib/config';
+import { getTeamLlm } from '@/lib/llm/get-team-llm';
 import { checkRateLimit } from '@/lib/utils/rate-limit';
 import { z } from 'zod';
 import { zodResponseFormat } from 'openai/helpers/zod';
@@ -82,8 +81,9 @@ Score each slide 0–100 and the overall set 0–100 based on these ASO best pra
 
 Be constructive but specific. Identify exact words that weaken the copy and suggest concrete replacements.`;
 
-    const completion = await openai.beta.chat.completions.parse({
-      model: LLM_MODEL,
+    const { client, model } = await getTeamLlm(teamId);
+    const completion = await client.beta.chat.completions.parse({
+      model,
       messages: [{ role: 'user', content: prompt }],
       response_format: zodResponseFormat(ScoreResponseSchema, 'score_response'),
     });

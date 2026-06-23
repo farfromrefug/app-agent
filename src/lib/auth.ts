@@ -8,6 +8,7 @@ import NextAuth, {
 import EmailProvider from 'next-auth/providers/email';
 import GoogleProvider from 'next-auth/providers/google';
 import LinkedInProvider from 'next-auth/providers/linkedin';
+import CredentialsProvider from 'next-auth/providers/credentials';
 
 import { identifyUser, trackAnalytics } from '@/lib/analytics';
 import sendVerificationRequestEmail from '@/lib/emails/send-verification-request';
@@ -23,11 +24,13 @@ import {
 import {
   GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET,
+  OPEN_SOURCE_MODE,
   VERCEL_URL,
   WHITE_LABEL_CONFIG,
 } from '@/lib/config';
 import { NotPermittedError, UnauthorizedError } from '@/types/errors';
 import { getUserLocale } from '@/lib/utils/server-locale';
+import { verifyPassword } from '@/lib/password';
 
 const VERCEL_DEPLOYMENT = !!VERCEL_URL;
 
@@ -86,6 +89,41 @@ export const authOptions: NextAuthOptions = {
     //     return user;
     //   },
     // }),
+    // Local email + password login for self-hosted / desktop setups where no
+    // email service or OAuth provider is configured. Bootstrap an account with
+    // `yarn admin:create`. Disabled when NEXT_PUBLIC_OPEN_SOURCE=false.
+    ...(OPEN_SOURCE_MODE
+      ? [
+          CredentialsProvider({
+            id: 'credentials',
+            name: 'Password',
+            credentials: {
+              email: { label: 'Email', type: 'email' },
+              password: { label: 'Password', type: 'password' },
+            },
+            async authorize(credentials) {
+              if (!credentials?.email || !credentials?.password) {
+                return null;
+              }
+              const user = await prisma.user.findUnique({
+                where: { email: credentials.email.toLowerCase() },
+              });
+              if (!user?.passwordHash) {
+                return null;
+              }
+              if (!verifyPassword(credentials.password, user.passwordHash)) {
+                return null;
+              }
+              return {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                image: user.image,
+              };
+            },
+          }),
+        ]
+      : []),
   ],
   adapter: PrismaAdapter(prisma),
   session: { strategy: 'jwt' },

@@ -21,8 +21,13 @@ export const STRIPE_WEBHOOK_SECRET =
 export const STRIPE_PRO_PRICE_ID = process.env.STRIPE_PRO_PRICE_ID || 'none'; // May add more plans in the future
 export const NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY =
   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || 'none';
+// Open-source build: everything unlocked, billing UI hidden.
+// Set NEXT_PUBLIC_OPEN_SOURCE=false to restore upstream paid/Stripe behavior.
+export const OPEN_SOURCE_MODE =
+  (process.env.NEXT_PUBLIC_OPEN_SOURCE ?? 'true') !== 'false';
 export const NEXT_PUBLIC_FREE_PLAN_ENABLED =
-  process.env.NEXT_PUBLIC_FREE_PLAN_ENABLED || 'none';
+  process.env.NEXT_PUBLIC_FREE_PLAN_ENABLED ||
+  (OPEN_SOURCE_MODE ? 'true' : 'none');
 export const BLOCKED_PATHNAMES = [
   '/phpmyadmin',
   '/server-status',

@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { validateTeamAccess } from '@/lib/auth';
 import { AppNotFoundError, handleAppError } from '@/types/errors';
-import openai from '@/lib/llm/openai';
-import { LLM_MODEL } from '@/lib/config';
+import { getTeamLlm } from '@/lib/llm/get-team-llm';
 import { checkRateLimit } from '@/lib/utils/rate-limit';
 import { z } from 'zod';
 import { zodResponseFormat } from 'openai/helpers/zod';
@@ -68,8 +67,9 @@ Rules:
 - Vary the tone across slides: empowering, practical, social proof, emotional, call-to-action.
 - Do NOT mention competitor names.`;
 
-    const completion = await openai.beta.chat.completions.parse({
-      model: LLM_MODEL,
+    const { client, model } = await getTeamLlm(teamId);
+    const completion = await client.beta.chat.completions.parse({
+      model,
       messages: [{ role: 'user', content: prompt }],
       response_format: zodResponseFormat(SlidesSchema, 'slides_response'),
     });

@@ -1,6 +1,6 @@
-import { LLM_MODEL } from '@/lib/config';
 import { ChatCompletionMessageParam } from 'openai/resources/index.mjs';
-import openai, { zodResponseFormat } from '@/lib/llm/openai';
+import { zodResponseFormat } from '@/lib/llm/openai';
+import { getCurrentLlm } from '@/lib/llm/llm-context';
 import { keywordFinalSanityCheckPrompt } from '@/lib/llm/prompts/keyword';
 import { z } from 'zod';
 import { LlmRefusalError } from '@/types/errors';
@@ -30,8 +30,9 @@ export const localeSanityCheck = async (
     },
   ] as ChatCompletionMessageParam[];
 
-  const response = await openai.beta.chat.completions.parse({
-    model: LLM_MODEL,
+  const { client, model } = getCurrentLlm();
+  const response = await client.beta.chat.completions.parse({
+    model,
     messages,
     response_format: zodResponseFormat(IndicesResponseSchema, 'indices'),
   });
@@ -63,8 +64,9 @@ export const keywordFinalSanityCheck = async (
     },
   ] as ChatCompletionMessageParam[];
 
-  const response = await openai.beta.chat.completions.parse({
-    model: LLM_MODEL,
+  const { client, model } = getCurrentLlm();
+  const response = await client.beta.chat.completions.parse({
+    model,
     messages,
     response_format: zodResponseFormat(IndicesResponseSchema, 'indices'),
   });

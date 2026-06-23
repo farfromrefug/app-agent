@@ -6,7 +6,7 @@ import {
   InvalidParamsError,
 } from '@/types/errors';
 import prisma from '@/lib/prisma';
-import openai from '@/lib/llm/openai';
+import { getTeamLlm } from '@/lib/llm/get-team-llm';
 import { scoreKeyword } from '@/lib/aso/score';
 import { scoreKeywordGPlay } from '@/lib/google-play/score-keyword';
 import { googlePlayToAppStore } from '@/lib/utils/locale';
@@ -61,8 +61,10 @@ Requirements:
 
 Example: ["photo editor", "remove background", "portrait mode", "selfie camera filter"]`;
 
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4o-mini',
+    const { client, model, provider } = await getTeamLlm(teamId);
+    const completion = await client.chat.completions.create({
+      // Prefer the cheaper mini model on OpenAI; otherwise use the team's model.
+      model: provider === 'openai' ? 'gpt-4o-mini' : model,
       messages: [{ role: 'user', content: prompt }],
       response_format: { type: 'json_object' },
       temperature: 0.7,

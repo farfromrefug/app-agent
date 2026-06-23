@@ -1,8 +1,8 @@
-import { LLM_MODEL } from '@/lib/config';
 import { logLLMUsage } from '@/lib/llm/log-usage';
 import { ChatCompletionMessageParam } from 'openai/resources/index.mjs';
 import { LocaleCode, getLocaleName } from '@/lib/utils/locale';
-import openai, { zodResponseFormat } from '@/lib/llm/openai';
+import { zodResponseFormat } from '@/lib/llm/openai';
+import { getCurrentLlm } from '@/lib/llm/llm-context';
 import { z } from 'zod';
 import { LlmRefusalError } from '@/types/errors';
 import { keywordGenerationPrompt } from '@/lib/llm/prompts/keyword';
@@ -32,8 +32,9 @@ Locale: ${getLocaleName(locale)}`,
     },
   ] as ChatCompletionMessageParam[];
 
-  const response = await openai.beta.chat.completions.parse({
-    model: LLM_MODEL,
+  const { client, model } = getCurrentLlm();
+  const response = await client.beta.chat.completions.parse({
+    model,
     messages,
     response_format: zodResponseFormat(KeywordResponseSchema, 'keywords'),
   });
@@ -42,6 +43,6 @@ Locale: ${getLocaleName(locale)}`,
     throw new LlmRefusalError(response.choices[0].message.refusal);
   }
 
-  logLLMUsage('generate-aso-keywords', LLM_MODEL, response.usage);
+  logLLMUsage('generate-aso-keywords', model, response.usage);
   return response.choices[0].message.parsed?.keywords ?? [];
 }

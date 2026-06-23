@@ -3,7 +3,7 @@ import { put } from '@vercel/blob';
 import { validateTeamAccess } from '@/lib/auth';
 import { AppNotFoundError, handleAppError } from '@/types/errors';
 import prisma from '@/lib/prisma';
-import openai from '@/lib/llm/openai';
+import { getTeamLlm } from '@/lib/llm/get-team-llm';
 import { nanoid } from 'nanoid';
 
 export const maxDuration = 60;
@@ -30,10 +30,23 @@ export async function POST(
       );
     }
 
+    // Image generation relies on OpenAI's DALL·E API; it has no equivalent on
+    // the other OpenAI-compatible providers, so require an OpenAI provider here.
+    const { client, provider } = await getTeamLlm(teamId);
+    if (provider !== 'openai') {
+      return NextResponse.json(
+        {
+          error:
+            'Image generation requires an OpenAI provider. Update the LLM provider in team settings to use this feature.',
+        },
+        { status: 400 }
+      );
+    }
+
     // Enhance prompt for app screenshot backgrounds
     const enhancedPrompt = `App store screenshot background image. ${prompt.trim()}. Abstract, clean, modern design. No text, no UI elements, no devices. Suitable as a background for mobile app marketing.`;
 
-    const response = await openai.images.generate({
+    const response = await client.images.generate({
       model: 'dall-e-3',
       prompt: enhancedPrompt,
       n: 1,

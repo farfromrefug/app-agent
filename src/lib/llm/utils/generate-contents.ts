@@ -5,12 +5,12 @@ import {
   userPromptToGenerateDescription,
   userPromptToGenerateDescriptionForJa,
 } from '../prompts/optimization';
-import openai, { zodResponseFormat } from '@/lib/llm/openai';
+import { zodResponseFormat } from '@/lib/llm/openai';
+import { getCurrentLlm } from '@/lib/llm/llm-context';
 import { z } from 'zod';
 import { ChatCompletionMessageParam } from 'openai/resources/index.mjs';
 import { LlmRefusalError } from '@/types/errors';
 import { getLocaleName, LocaleCode } from '@/lib/utils/locale';
-import { LLM_MODEL } from '@/lib/config';
 import { logLLMUsage } from '@/lib/llm/log-usage';
 
 const ContentsResponseSchemaForAppStore = z.object({
@@ -125,8 +125,9 @@ export async function generateContents(
     });
   }
 
-  const response = await openai.beta.chat.completions.parse({
-    model: LLM_MODEL,
+  const { client, model } = getCurrentLlm();
+  const response = await client.beta.chat.completions.parse({
+    model,
     messages,
     response_format:
       store === Store.APPSTORE
@@ -138,7 +139,7 @@ export async function generateContents(
     throw new LlmRefusalError('The model refused to generate contents.');
   }
 
-  logLLMUsage('generate-contents', LLM_MODEL, response.usage);
+  logLLMUsage('generate-contents', model, response.usage);
   const result = response.choices[0].message.parsed;
   return result || {};
 }
@@ -200,11 +201,12 @@ export async function generateDescription(
     messages.push({ role: 'user', content: retry.feedback });
   }
 
-  const response = await openai.chat.completions.create({
-    model: LLM_MODEL,
+  const { client, model } = getCurrentLlm();
+  const response = await client.chat.completions.create({
+    model,
     messages,
   });
 
-  logLLMUsage('generate-description', LLM_MODEL, response.usage);
+  logLLMUsage('generate-description', model, response.usage);
   return response.choices[0].message.content || '';
 }

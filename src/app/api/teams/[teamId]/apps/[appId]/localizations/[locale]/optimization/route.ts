@@ -1,4 +1,5 @@
 import { optimizeContents } from '@/lib/aso/optimize';
+import { withTeamLlm } from '@/lib/llm/llm-context';
 import { validateTeamAccess } from '@/lib/auth';
 import prisma from '@/lib/prisma';
 import { LocaleCode } from '@/lib/utils/locale';
@@ -31,7 +32,15 @@ export async function POST(
 
     const { appId, locale } = params;
     const data = await request.json();
-    console.log(JSON.stringify({ event: 'optimization_start', userId, teamId, appId, locale }));
+    console.log(
+      JSON.stringify({
+        event: 'optimization_start',
+        userId,
+        teamId,
+        appId,
+        locale,
+      })
+    );
 
     // Verify app belongs to team
     const app = await prisma.app.findFirst({
@@ -74,26 +83,45 @@ export async function POST(
       throw new InvalidParamsError('Missing required properties');
     }
 
-    // Generate optimized ASO content
-    const result = await optimizeContents(
-      locale,
-      data.title,
-      data.asoKeywords,
-      data.targets,
-      data.subtitle,
-      data.keywords,
-      data.description,
-      data.shortDescription,
-      data.descriptionOutline,
-      data.previousResult,
-      data.userFeedback,
-      app.store
+    // Generate optimized ASO content using the team's configured LLM.
+    const result = await withTeamLlm(teamId, () =>
+      optimizeContents(
+        locale,
+        data.title,
+        data.asoKeywords,
+        data.targets,
+        data.subtitle,
+        data.keywords,
+        data.description,
+        data.shortDescription,
+        data.descriptionOutline,
+        data.previousResult,
+        data.userFeedback,
+        app.store
+      )
     );
 
-    console.log(JSON.stringify({ event: 'optimization_complete', userId, teamId, appId, locale, durationMs: Date.now() - startedAt }));
+    console.log(
+      JSON.stringify({
+        event: 'optimization_complete',
+        userId,
+        teamId,
+        appId,
+        locale,
+        durationMs: Date.now() - startedAt,
+      })
+    );
     return NextResponse.json(result);
   } catch (error) {
-    console.log(JSON.stringify({ event: 'optimization_error', userId, teamId, error: (error as Error).message, durationMs: Date.now() - startedAt }));
+    console.log(
+      JSON.stringify({
+        event: 'optimization_error',
+        userId,
+        teamId,
+        error: (error as Error).message,
+        durationMs: Date.now() - startedAt,
+      })
+    );
     return handleAppError(error as Error);
   }
 }

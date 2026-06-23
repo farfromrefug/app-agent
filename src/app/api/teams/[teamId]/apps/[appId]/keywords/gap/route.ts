@@ -1,6 +1,7 @@
 import { validateTeamAccess } from '@/lib/auth';
 import { handleAppError, AppNotFoundError } from '@/types/errors';
 import prisma from '@/lib/prisma';
+import { parseGuessedKeywords } from '@/lib/serialize-keywords';
 import { NextResponse } from 'next/server';
 
 export interface KeywordGapEntry {
@@ -57,7 +58,7 @@ export async function GET(
     > = {};
 
     for (const competitor of competitors) {
-      for (const kw of competitor.guessedKeywords) {
+      for (const kw of parseGuessedKeywords(competitor.guessedKeywords)) {
         const lower = kw.toLowerCase().trim();
         if (!lower) continue;
         const key = `${competitor.locale}:${lower}`;

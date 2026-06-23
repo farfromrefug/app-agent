@@ -15,7 +15,7 @@ import {
 import { validateCronSecret } from '@/lib/utils/cron-auth';
 import prisma from '@/lib/prisma';
 import { subDays } from 'date-fns';
-import { Store } from '@prisma/client';
+import { Store } from '@/lib/db-enums';
 import { logCron } from '@/lib/utils/log-cron';
 
 export async function GET(request: NextRequest) {

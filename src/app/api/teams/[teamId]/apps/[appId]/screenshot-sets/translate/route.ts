@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { validateTeamAccess } from '@/lib/auth';
 import { AppNotFoundError, handleAppError } from '@/types/errors';
-import openai from '@/lib/llm/openai';
-import { LLM_MODEL } from '@/lib/config';
+import { getTeamLlm } from '@/lib/llm/get-team-llm';
 import { checkRateLimit } from '@/lib/utils/rate-limit';
 import { z } from 'zod';
 import { zodResponseFormat } from 'openai/helpers/zod';
@@ -92,8 +91,9 @@ Translate each slide into EACH of the target locales. Follow these rules:
 - Keep badge text very short (1-2 words) or leave empty if untranslatable
 - Return translations for ALL ${targetLocales.length} target locale(s) and ALL ${slides.length} slides`;
 
-    const completion = await openai.beta.chat.completions.parse({
-      model: LLM_MODEL,
+    const { client, model } = await getTeamLlm(teamId);
+    const completion = await client.beta.chat.completions.parse({
+      model,
       messages: [{ role: 'user', content: prompt }],
       response_format: zodResponseFormat(
         TranslationResponseSchema,

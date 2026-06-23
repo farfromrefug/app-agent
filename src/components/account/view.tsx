@@ -5,12 +5,14 @@ import { TeamSettings } from '@/components/account/team-settings';
 import { BillingSettings } from '@/components/account/bill-settings';
 import { NotificationSettings } from '@/components/account/notification-settings';
 import { StoreCredentials } from '@/components/account/store-credentials';
+import { LlmSettings } from '@/components/account/llm-settings';
 import { PublishApprovalQueue } from '@/components/account/publish-approval-queue';
 import { AutoReplyRules } from '@/components/aso/auto-reply-rules';
 import { AuditLog } from '@/components/account/audit-log';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { DeleteAccount } from '@/components/account/delete-account';
+import { OPEN_SOURCE_MODE } from '@/lib/config';
 import { useTranslations } from 'next-intl';
 
 export default function AccountSettingsView() {
@@ -32,8 +34,9 @@ export default function AccountSettingsView() {
         <AccountInfo />
         <TeamSettings />
         <PublishApprovalQueue />
-        <BillingSettings />
+        {!OPEN_SOURCE_MODE && <BillingSettings />}
         <StoreCredentials />
+        <LlmSettings />
         <NotificationSettings />
         <motion.div
           initial={{ opacity: 0, y: 20 }}

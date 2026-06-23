@@ -104,8 +104,10 @@ Here's the list of environment variables you need to set:
   - The URL of your Upstash account. Used for caching.
 - `UPSTASH_REDIS_REST_TOKEN`
   - The token of your Upstash account. Used for caching.
+- `NEXT_PUBLIC_OPEN_SOURCE`
+  - Open-source mode. Defaults to `true`: the app is fully free/unlimited and all billing/Stripe UI is hidden, so none of the Stripe variables below are required. Set to `false` to restore the paid plan flow.
 - `NEXT_PUBLIC_FREE_PLAN_ENABLED`
-  - Whether the free plan is enabled. Set to `true` to enable the free plan.
+  - Whether the free plan is enabled. Implicitly `true` while `NEXT_PUBLIC_OPEN_SOURCE=true`; only set this explicitly when running in paid mode.
 - `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`
   - The publishable key of your Stripe account. Used for payments. If you set `NEXT_PUBLIC_FREE_PLAN_ENABLED` to `true`, this is not necessary.
 - `STRIPE_SECRET_KEY`
@@ -114,8 +116,10 @@ Here's the list of environment variables you need to set:
   - The webhook secret of your Stripe account. Used for webhooks. If you set `NEXT_PUBLIC_FREE_PLAN_ENABLED` to `true`, this is not necessary.
 - `STRIPE_PRO_PRICE_ID`
   - The price ID of your Stripe Pro plan. Used for payments. If you set `NEXT_PUBLIC_FREE_PLAN_ENABLED` to `true`, this is not necessary.
+- `DATABASE_PROVIDER`
+  - `postgresql` (default) or `sqlite`. Use `sqlite` for a zero-setup local/desktop database; the SQLite schema is generated automatically from the canonical Postgres schema by `yarn db:setup`.
 - `DATABASE_URL`
-  - The URL of your PostgreSQL database. Beside a local machine, you can use [Supabase](https://supabase.com/) or [Neon](https://neon.tech/) for free services.
+  - The database connection string. For Postgres: a `postgresql://…` URL (beside a local machine, you can use [Supabase](https://supabase.com/) or [Neon](https://neon.tech/) for free services). For SQLite: a file URL such as `file:./dev.db`.
 
 ### 3. Install dependencies
 
@@ -128,16 +132,43 @@ npm install
 
 ### 4. Set up DB
 
+`db:setup` reads `DATABASE_PROVIDER` and prepares the right database — for
+Postgres it runs `prisma generate` + `prisma migrate deploy`; for SQLite it
+generates a SQLite schema and runs `prisma db push`.
+
 ```bash
-yarn prisma generate
-yarn prisma migrate deploy
+yarn db:setup
 
 # Or with NPM
-npm run prisma generate
-npm run prisma migrate deploy
+npm run db:setup
 ```
 
-### 5. Run the development server
+For a local SQLite database, set the following in `.env` first:
+
+```bash
+DATABASE_PROVIDER=sqlite
+DATABASE_URL="file:./dev.db"
+```
+
+`db:setup` also runs automatically before `yarn dev` and `yarn build`.
+
+### 5. Create your admin account
+
+In open-source mode you can bootstrap the first account from the CLI and sign in
+with email + password — no email service or OAuth required. Set `ADMIN_EMAIL`,
+`ADMIN_NAME`, and `ADMIN_PASSWORD` in your `.env`, then run:
+
+```bash
+yarn admin:create
+
+# Or with NPM
+npm run admin:create
+```
+
+This is idempotent — re-running updates the password. Sign in later at
+`/login` using the password form.
+
+### 6. Run the development server
 
 ```bash
 yarn dev

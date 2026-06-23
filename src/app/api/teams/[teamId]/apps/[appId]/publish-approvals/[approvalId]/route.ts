@@ -6,7 +6,7 @@ import {
 } from '@/types/errors';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
-import { Role } from '@prisma/client';
+import { Role } from '@/lib/db-enums';
 import { createNotification } from '@/lib/notifications';
 
 // PATCH /api/teams/[teamId]/apps/[appId]/publish-approvals/[approvalId]

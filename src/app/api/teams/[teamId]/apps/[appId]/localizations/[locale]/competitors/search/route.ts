@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Store } from '@prisma/client';
+import { Store } from '@/lib/db-enums';
 import { googlePlayToAppStore } from '@/lib/utils/locale';
 import { searchApps as searchAppStoreApps } from '@/lib/app-store/search-apps';
 import { getLocaleString as getAppStoreLocaleString } from '@/lib/app-store/country-mapper';
